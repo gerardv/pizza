@@ -31,7 +31,7 @@
         ],
         "typeProperties": {
           "pipeline": {
-            "referenceName": "8950d7c2-061c-4d00-aaa4-b505beda6b5e",
+            "referenceName": "01dba2df-9e86-4f17-a50a-cbe42d39371c",
             "type": "PipelineReference"
           },
           "waitOnCompletion": true,
@@ -66,8 +66,8 @@
           "secureInput": false
         },
         "typeProperties": {
-          "notebookId": "c5d7c039-6c06-452c-a713-88a59b1eb9bc",
-          "workspaceId": "1b47e79e-9cb3-420c-8316-492b02b75565",
+          "notebookId": "dabbb942-3114-40b2-b026-8e5b19ec9c83",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
           "parameters": {
             "start_month": {
               "value": {
