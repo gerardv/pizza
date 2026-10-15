@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "NB_Silver_NYCTaxi",
+    "description": "Silver: NYC TLC bronze parquet/csv files to typed Delta tables silver_trips and silver_taxi_zone"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "dabbb942-3114-40b2-b026-8e5b19ec9c83"
+  }
+}
