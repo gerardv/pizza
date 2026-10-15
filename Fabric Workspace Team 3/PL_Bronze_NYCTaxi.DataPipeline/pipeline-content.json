@@ -1,6 +1,6 @@
 {
   "properties": {
-    "description": "Bronze: copy NYC TLC trip record files (yellow + green, monthly parquet) and taxi zone reference files as-is into the Taxi lakehouse. Re-runnable: files are overwritten. Full load = startMonth 2022-01, monthCount 48; scheduled refresh = recent months only.",
+    "description": "Bronze: copy NYC TLC trip record files (yellow + green, monthly parquet) and taxi zone reference files as-is into the Taxi lakehouse. Re-runnable: files are overwritten. Months not yet published by TLC (HTTP 404) are skipped. Full load = startMonth 2022-01, monthCount 48; scheduled refresh = recent months only.",
     "activities": [
       {
         "name": "ForEach month",
@@ -164,6 +164,74 @@
                   }
                 },
                 "enableStaging": false
+              }
+            },
+            {
+              "name": "Skip yellow if not published",
+              "description": "Catch: a 404 means TLC has not published this month yet - skip it (the next run picks it up). Any other copy error fails the run.",
+              "type": "IfCondition",
+              "dependsOn": [
+                {
+                  "activity": "Copy yellow tripdata",
+                  "dependencyConditions": [
+                    "Failed"
+                  ]
+                }
+              ],
+              "typeProperties": {
+                "expression": {
+                  "value": "@or(contains(string(activity('Copy yellow tripdata').error), '404'), contains(string(activity('Copy yellow tripdata').error), 'NotFound'))",
+                  "type": "Expression"
+                },
+                "ifTrueActivities": [],
+                "ifFalseActivities": [
+                  {
+                    "name": "Fail yellow copy",
+                    "type": "Fail",
+                    "dependsOn": [],
+                    "typeProperties": {
+                      "message": {
+                        "value": "@activity('Copy yellow tripdata').error.message",
+                        "type": "Expression"
+                      },
+                      "errorCode": "CopyFailed"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Skip green if not published",
+              "description": "Catch: a 404 means TLC has not published this month yet - skip it (the next run picks it up). Any other copy error fails the run.",
+              "type": "IfCondition",
+              "dependsOn": [
+                {
+                  "activity": "Copy green tripdata",
+                  "dependencyConditions": [
+                    "Failed"
+                  ]
+                }
+              ],
+              "typeProperties": {
+                "expression": {
+                  "value": "@or(contains(string(activity('Copy green tripdata').error), '404'), contains(string(activity('Copy green tripdata').error), 'NotFound'))",
+                  "type": "Expression"
+                },
+                "ifTrueActivities": [],
+                "ifFalseActivities": [
+                  {
+                    "name": "Fail green copy",
+                    "type": "Fail",
+                    "dependsOn": [],
+                    "typeProperties": {
+                      "message": {
+                        "value": "@activity('Copy green tripdata').error.message",
+                        "type": "Expression"
+                      },
+                      "errorCode": "CopyFailed"
+                    }
+                  }
+                ]
               }
             }
           ]

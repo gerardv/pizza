@@ -1,0 +1,106 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "Set start month",
+        "description": "Empty startMonth = rolling window: the monthCount full months before the current month.",
+        "type": "SetVariable",
+        "dependsOn": [],
+        "policy": {
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "variableName": "effectiveStartMonth",
+          "value": {
+            "value": "@if(empty(pipeline().parameters.startMonth), formatDateTime(subtractFromTime(startOfMonth(utcNow()), pipeline().parameters.monthCount, 'Month'), 'yyyy-MM'), pipeline().parameters.startMonth)",
+            "type": "Expression"
+          }
+        }
+      },
+      {
+        "name": "Bronze ingestion",
+        "type": "ExecutePipeline",
+        "dependsOn": [
+          {
+            "activity": "Set start month",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "8950d7c2-061c-4d00-aaa4-b505beda6b5e",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true,
+          "parameters": {
+            "startMonth": {
+              "value": "@variables('effectiveStartMonth')",
+              "type": "Expression"
+            },
+            "monthCount": {
+              "value": "@pipeline().parameters.monthCount",
+              "type": "Expression"
+            }
+          }
+        }
+      },
+      {
+        "name": "Silver staging",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "Bronze ingestion",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "c5d7c039-6c06-452c-a713-88a59b1eb9bc",
+          "workspaceId": "1b47e79e-9cb3-420c-8316-492b02b75565",
+          "parameters": {
+            "start_month": {
+              "value": {
+                "value": "@variables('effectiveStartMonth')",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "month_count": {
+              "value": {
+                "value": "@pipeline().parameters.monthCount",
+                "type": "Expression"
+              },
+              "type": "int"
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "startMonth": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "monthCount": {
+        "type": "int",
+        "defaultValue": 3
+      }
+    },
+    "variables": {
+      "effectiveStartMonth": {
+        "type": "String"
+      }
+    }
+  }
+}

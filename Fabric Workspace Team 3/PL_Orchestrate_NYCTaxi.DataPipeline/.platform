@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "PL_Orchestrate_NYCTaxi",
+    "description": "Orchestrator: bronze ingestion (PL_Bronze_NYCTaxi) then silver staging (NB_Silver_NYCTaxi) for one month range"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "21636254-7b9d-4cc5-a2c5-184d1b4cd38c"
+  }
+}

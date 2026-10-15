@@ -23,20 +23,20 @@
 # MARKDOWN ********************
 
 # # Silver: NYC TLC trips
-#
+# 
 # Converts the bronze files in `Files/bronze/nyctaxi` into typed Delta tables:
-#
+# 
 # | Table | Source | Load |
 # |---|---|---|
 # | `silver_trips` | `yellow/` + `green/` monthly parquet | per `taxi_type` + `source_month` (re-runnable, `replaceWhere`) |
 # | `silver_taxi_zone` | `reference/taxi_zone_lookup.csv` | full overwrite |
-#
+# 
 # **Schema drift in the source** (checked over 2022-01 .. 2025-12):
 # - From 2023-02 several columns changed type (int64 -> int32, double -> int64).
 # - `airport_fee` was renamed to `Airport_fee` in 2023-02; Spark is case-insensitive, so reading both
 #   in one go with `mergeSchema` fails with a duplicate column.
 # - `cbd_congestion_fee` exists from 2025-01; green `ehail_fee` is an all-null column until 2023-01.
-#
+# 
 # Therefore every file is read on its own and mapped onto one fixed target schema.
 # Data quality issues are **flagged, not removed** (`is_*` / `has_*` columns); filtering is a gold decision.
 
@@ -215,7 +215,7 @@ zones.write.format("delta").mode("overwrite").option("overwriteSchema", True).sa
 # MARKDOWN ********************
 
 # ## Summary
-#
+# 
 # Row counts of what this run loaded. Returned as notebook exit value so the orchestrator can check it.
 
 # CELL ********************
