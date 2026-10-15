@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "PL_Bronze_NYCTaxi",
+    "description": "Ingest NYC TLC yellow/green trip parquet files and zone reference files into Taxi lakehouse Files/bronze/nyctaxi"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "01dba2df-9e86-4f17-a50a-cbe42d39371c"
+  }
+}

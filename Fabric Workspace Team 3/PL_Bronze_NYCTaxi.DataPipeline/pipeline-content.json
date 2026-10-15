@@ -1,0 +1,279 @@
+{
+  "properties": {
+    "description": "Bronze: copy NYC TLC trip record files (yellow + green, monthly parquet) and taxi zone reference files as-is into the Taxi lakehouse. Re-runnable: files are overwritten. Full load = startMonth 2022-01, monthCount 48; scheduled refresh = recent months only.",
+    "activities": [
+      {
+        "name": "ForEach month",
+        "type": "ForEach",
+        "dependsOn": [],
+        "typeProperties": {
+          "items": {
+            "value": "@range(0, pipeline().parameters.monthCount)",
+            "type": "Expression"
+          },
+          "isSequential": false,
+          "batchCount": 4,
+          "activities": [
+            {
+              "name": "Copy yellow tripdata",
+              "type": "Copy",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.01:00:00",
+                "retry": 2,
+                "retryIntervalInSeconds": 60,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "source": {
+                  "type": "BinarySource",
+                  "storeSettings": {
+                    "type": "HttpReadSettings",
+                    "requestMethod": "GET"
+                  },
+                  "formatSettings": {
+                    "type": "BinaryReadSettings"
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "type": "Binary",
+                    "typeProperties": {
+                      "location": {
+                        "type": "HttpServerLocation",
+                        "relativeUrl": {
+                          "value": "@concat('yellow_tripdata_', formatDateTime(addToTime(concat(pipeline().parameters.startMonth, '-01T00:00:00Z'), item(), 'Month'), 'yyyy-MM'), '.parquet')",
+                          "type": "Expression"
+                        }
+                      }
+                    },
+                    "externalReferences": {
+                      "connection": "f7d3f10f-f31d-4fdc-8eae-c6d7c27ceeaf"
+                    }
+                  }
+                },
+                "sink": {
+                  "type": "BinarySink",
+                  "storeSettings": {
+                    "type": "LakehouseWriteSettings"
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "linkedService": {
+                      "name": "Taxi",
+                      "properties": {
+                        "annotations": [],
+                        "type": "Lakehouse",
+                        "typeProperties": {
+                          "workspaceId": "1b47e79e-9cb3-420c-8316-492b02b75565",
+                          "artifactId": "b58a5437-69fc-4ce4-939e-bb95fc82cd34",
+                          "rootFolder": "Files"
+                        }
+                      }
+                    },
+                    "type": "Binary",
+                    "typeProperties": {
+                      "location": {
+                        "type": "LakehouseLocation",
+                        "folderPath": {
+                          "value": "@concat('bronze/nyctaxi/yellow/', formatDateTime(addToTime(concat(pipeline().parameters.startMonth, '-01T00:00:00Z'), item(), 'Month'), 'yyyy'))",
+                          "type": "Expression"
+                        },
+                        "fileName": {
+                          "value": "@concat('yellow_tripdata_', formatDateTime(addToTime(concat(pipeline().parameters.startMonth, '-01T00:00:00Z'), item(), 'Month'), 'yyyy-MM'), '.parquet')",
+                          "type": "Expression"
+                        }
+                      }
+                    }
+                  }
+                },
+                "enableStaging": false
+              }
+            },
+            {
+              "name": "Copy green tripdata",
+              "type": "Copy",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.01:00:00",
+                "retry": 2,
+                "retryIntervalInSeconds": 60,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "source": {
+                  "type": "BinarySource",
+                  "storeSettings": {
+                    "type": "HttpReadSettings",
+                    "requestMethod": "GET"
+                  },
+                  "formatSettings": {
+                    "type": "BinaryReadSettings"
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "type": "Binary",
+                    "typeProperties": {
+                      "location": {
+                        "type": "HttpServerLocation",
+                        "relativeUrl": {
+                          "value": "@concat('green_tripdata_', formatDateTime(addToTime(concat(pipeline().parameters.startMonth, '-01T00:00:00Z'), item(), 'Month'), 'yyyy-MM'), '.parquet')",
+                          "type": "Expression"
+                        }
+                      }
+                    },
+                    "externalReferences": {
+                      "connection": "f7d3f10f-f31d-4fdc-8eae-c6d7c27ceeaf"
+                    }
+                  }
+                },
+                "sink": {
+                  "type": "BinarySink",
+                  "storeSettings": {
+                    "type": "LakehouseWriteSettings"
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "linkedService": {
+                      "name": "Taxi",
+                      "properties": {
+                        "annotations": [],
+                        "type": "Lakehouse",
+                        "typeProperties": {
+                          "workspaceId": "1b47e79e-9cb3-420c-8316-492b02b75565",
+                          "artifactId": "b58a5437-69fc-4ce4-939e-bb95fc82cd34",
+                          "rootFolder": "Files"
+                        }
+                      }
+                    },
+                    "type": "Binary",
+                    "typeProperties": {
+                      "location": {
+                        "type": "LakehouseLocation",
+                        "folderPath": {
+                          "value": "@concat('bronze/nyctaxi/green/', formatDateTime(addToTime(concat(pipeline().parameters.startMonth, '-01T00:00:00Z'), item(), 'Month'), 'yyyy'))",
+                          "type": "Expression"
+                        },
+                        "fileName": {
+                          "value": "@concat('green_tripdata_', formatDateTime(addToTime(concat(pipeline().parameters.startMonth, '-01T00:00:00Z'), item(), 'Month'), 'yyyy-MM'), '.parquet')",
+                          "type": "Expression"
+                        }
+                      }
+                    }
+                  }
+                },
+                "enableStaging": false
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "ForEach reference file",
+        "type": "ForEach",
+        "dependsOn": [],
+        "typeProperties": {
+          "items": {
+            "value": "@pipeline().parameters.referenceFiles",
+            "type": "Expression"
+          },
+          "isSequential": false,
+          "activities": [
+            {
+              "name": "Copy reference file",
+              "type": "Copy",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.00:30:00",
+                "retry": 2,
+                "retryIntervalInSeconds": 60,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "source": {
+                  "type": "BinarySource",
+                  "storeSettings": {
+                    "type": "HttpReadSettings",
+                    "requestMethod": "GET"
+                  },
+                  "formatSettings": {
+                    "type": "BinaryReadSettings"
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "type": "Binary",
+                    "typeProperties": {
+                      "location": {
+                        "type": "HttpServerLocation",
+                        "relativeUrl": {
+                          "value": "@item()",
+                          "type": "Expression"
+                        }
+                      }
+                    },
+                    "externalReferences": {
+                      "connection": "8c74ff85-2c23-4dfe-9dd3-8c78c48a0c89"
+                    }
+                  }
+                },
+                "sink": {
+                  "type": "BinarySink",
+                  "storeSettings": {
+                    "type": "LakehouseWriteSettings"
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "linkedService": {
+                      "name": "Taxi",
+                      "properties": {
+                        "annotations": [],
+                        "type": "Lakehouse",
+                        "typeProperties": {
+                          "workspaceId": "1b47e79e-9cb3-420c-8316-492b02b75565",
+                          "artifactId": "b58a5437-69fc-4ce4-939e-bb95fc82cd34",
+                          "rootFolder": "Files"
+                        }
+                      }
+                    },
+                    "type": "Binary",
+                    "typeProperties": {
+                      "location": {
+                        "type": "LakehouseLocation",
+                        "folderPath": "bronze/nyctaxi/reference",
+                        "fileName": {
+                          "value": "@item()",
+                          "type": "Expression"
+                        }
+                      }
+                    }
+                  }
+                },
+                "enableStaging": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "startMonth": {
+        "type": "string",
+        "defaultValue": "2022-01"
+      },
+      "monthCount": {
+        "type": "int",
+        "defaultValue": 48
+      },
+      "referenceFiles": {
+        "type": "array",
+        "defaultValue": [
+          "taxi_zone_lookup.csv",
+          "taxi_zones.zip"
+        ]
+      }
+    },
+    "annotations": []
+  }
+}
